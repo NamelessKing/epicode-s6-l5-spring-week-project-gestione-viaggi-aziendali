@@ -5,7 +5,9 @@ import it.epicode.gestioneviaggiaziendali.dto.request.UpdateTravelRequest;
 import it.epicode.gestioneviaggiaziendali.dto.request.UpdateTravelStatusRequest;
 import it.epicode.gestioneviaggiaziendali.dto.response.TravelResponse;
 import it.epicode.gestioneviaggiaziendali.entity.Travel;
+import it.epicode.gestioneviaggiaziendali.exception.ConflictException;
 import it.epicode.gestioneviaggiaziendali.exception.NotFoundException;
+import it.epicode.gestioneviaggiaziendali.repository.BookingRepository;
 import it.epicode.gestioneviaggiaziendali.repository.TravelRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,9 +17,11 @@ import org.springframework.stereotype.Service;
 public class TravelService {
 
     private final TravelRepository travelRepository;
+    private final BookingRepository bookingRepository;
 
-    public TravelService(TravelRepository travelRepository) {
+    public TravelService(TravelRepository travelRepository, BookingRepository bookingRepository) {
         this.travelRepository = travelRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     public Page<TravelResponse> findAll(Pageable pageable) {
@@ -58,6 +62,9 @@ public class TravelService {
     public void delete(Long id) {
         Travel travel = travelRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Travel con id " + id + " non trovato"));
+        if (bookingRepository.existsByTravelId(id)) {
+            throw new ConflictException("Impossibile eliminare il viaggio: esistono prenotazioni collegate");
+        }
         travelRepository.delete(travel);
     }
 
