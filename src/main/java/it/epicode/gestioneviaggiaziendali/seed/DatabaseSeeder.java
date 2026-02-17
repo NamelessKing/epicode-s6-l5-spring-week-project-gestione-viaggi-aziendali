@@ -2,6 +2,7 @@ package it.epicode.gestioneviaggiaziendali.seed;
 
 import it.epicode.gestioneviaggiaziendali.entity.Booking;
 import it.epicode.gestioneviaggiaziendali.entity.Employee;
+import it.epicode.gestioneviaggiaziendali.entity.Role;
 import it.epicode.gestioneviaggiaziendali.entity.Travel;
 import it.epicode.gestioneviaggiaziendali.entity.TravelStatus;
 import it.epicode.gestioneviaggiaziendali.repository.BookingRepository;
@@ -36,9 +37,11 @@ public class DatabaseSeeder implements CommandLineRunner {
             return;
         }
 
-        Employee e1 = new Employee("mrossi", "Mario", "Rossi", "m.rossi@example.com");
-        Employee e2 = new Employee("lbianchi", "Luca", "Bianchi", "l.bianchi@example.com");
-        Employee e3 = new Employee("gverdi", "Giulia", "Verdi", "g.verdi@example.com");
+        Employee e1 = new Employee("mrossi", "Mario", "Rossi", "m.rossi@example.com", "Password1");
+        Employee e2 = new Employee("lbianchi", "Luca", "Bianchi", "l.bianchi@example.com", "Password1");
+        Employee e3 = new Employee("gverdi", "Giulia", "Verdi", "g.verdi@example.com", "Password1");
+        // Rendo uno degli utenti admin per testare le autorizzazioni
+        e1.setRole(Role.ADMIN);
         employeeRepository.saveAll(List.of(e1, e2, e3));
 
         Travel t1 = new Travel();

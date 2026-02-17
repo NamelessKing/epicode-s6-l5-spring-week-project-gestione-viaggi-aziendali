@@ -34,18 +34,28 @@ public class EmployeeService {
         return toResponse(employee);
     }
 
+    public Employee findEntityById(Long id) {
+        // Metodo interno usato dal filtro JWT per ottenere l'entity completa (con ruolo e password)
+        return employeeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Employee con id " + id + " non trovato"));
+    }
+
     public EmployeeResponse create(CreateEmployeeRequest request) {
+        // 1) Controllo vincoli di unicita (username/email).
+        // 2) Creo entity Employee valorizzando anche la password (per login JWT).
+        // 3) Salvo e ritorno la response senza password.
         if (employeeRepository.existsByUsername(request.username())) {
-            throw new ConflictException("Username gi\u00e0 utilizzato");
+            throw new ConflictException("Username gia utilizzato");
         }
         if (employeeRepository.existsByEmail(request.email())) {
-            throw new ConflictException("Email gi\u00e0 utilizzata");
+            throw new ConflictException("Email gia utilizzata");
         }
         Employee employee = new Employee(
                 request.username(),
                 request.name(),
                 request.surname(),
-                request.email()
+                request.email(),
+                request.password()
         );
         return toResponse(employeeRepository.save(employee));
     }
@@ -56,13 +66,19 @@ public class EmployeeService {
 
         if (!employee.getEmail().equalsIgnoreCase(request.email())
                 && employeeRepository.existsByEmail(request.email())) {
-            throw new ConflictException("Email gi\u00e0 utilizzata");
+            throw new ConflictException("Email gia utilizzata");
         }
 
         employee.setName(request.name());
         employee.setSurname(request.surname());
         employee.setEmail(request.email());
         return toResponse(employeeRepository.save(employee));
+    }
+
+    public Employee findByEmail(String email) {
+        // Usato dal login: serve l'entity completa (con password) per verificare le credenziali.
+        return employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Employee con email " + email + " non trovato"));
     }
 
     public void delete(Long id) {

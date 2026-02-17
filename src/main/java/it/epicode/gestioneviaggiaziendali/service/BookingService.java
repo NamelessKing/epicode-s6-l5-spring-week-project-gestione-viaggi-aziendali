@@ -6,6 +6,7 @@ import it.epicode.gestioneviaggiaziendali.dto.response.EmployeeSummary;
 import it.epicode.gestioneviaggiaziendali.dto.response.TravelSummary;
 import it.epicode.gestioneviaggiaziendali.entity.Booking;
 import it.epicode.gestioneviaggiaziendali.entity.Employee;
+import it.epicode.gestioneviaggiaziendali.entity.Role;
 import it.epicode.gestioneviaggiaziendali.entity.Travel;
 import it.epicode.gestioneviaggiaziendali.exception.ConflictException;
 import it.epicode.gestioneviaggiaziendali.exception.NotFoundException;
@@ -45,9 +46,22 @@ public class BookingService {
         return toResponse(booking);
     }
 
-    public BookingResponse create(CreateBookingRequest request) {
-        Employee employee = employeeRepository.findById(request.employeeId())
-                .orElseThrow(() -> new NotFoundException("Employee con id " + request.employeeId() + " non trovato"));
+    public List<BookingResponse> findMine(Employee currentEmployee) {
+        // Ritorna solo le prenotazioni dell'utente autenticato
+        return bookingRepository.findByEmployeeId(currentEmployee.getId()).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public BookingResponse create(CreateBookingRequest request, Employee currentEmployee) {
+        // ===== ANTI-IDOR =====
+        // Se l'utente NON e admin, IGNORIAMO l'employeeId nel payload e usiamo l'id del principal.
+        // In questo modo un utente non puo prenotare viaggi per conto di altri.
+        boolean isAdmin = currentEmployee.getRole() == Role.ADMIN;
+        Long effectiveEmployeeId = isAdmin ? request.employeeId() : currentEmployee.getId();
+
+        Employee employee = employeeRepository.findById(effectiveEmployeeId)
+                .orElseThrow(() -> new NotFoundException("Employee con id " + effectiveEmployeeId + " non trovato"));
         Travel travel = travelRepository.findById(request.travelId())
                 .orElseThrow(() -> new NotFoundException("Travel con id " + request.travelId() + " non trovato"));
 
