@@ -11,6 +11,7 @@ import it.epicode.gestioneviaggiaziendali.repository.BookingRepository;
 import it.epicode.gestioneviaggiaziendali.repository.EmployeeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,10 +19,14 @@ public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final BookingRepository bookingRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public EmployeeService(EmployeeRepository employeeRepository, BookingRepository bookingRepository) {
+    public EmployeeService(EmployeeRepository employeeRepository,
+                           BookingRepository bookingRepository,
+                           PasswordEncoder passwordEncoder) {
         this.employeeRepository = employeeRepository;
         this.bookingRepository = bookingRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Page<EmployeeResponse> findAll(Pageable pageable) {
@@ -55,7 +60,7 @@ public class EmployeeService {
                 request.name(),
                 request.surname(),
                 request.email(),
-                request.password()
+                passwordEncoder.encode(request.password())
         );
         return toResponse(employeeRepository.save(employee));
     }

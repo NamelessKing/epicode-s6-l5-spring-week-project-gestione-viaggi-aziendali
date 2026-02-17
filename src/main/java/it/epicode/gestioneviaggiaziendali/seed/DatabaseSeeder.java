@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,13 +23,16 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final EmployeeRepository employeeRepository;
     private final TravelRepository travelRepository;
     private final BookingRepository bookingRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DatabaseSeeder(EmployeeRepository employeeRepository,
                           TravelRepository travelRepository,
-                          BookingRepository bookingRepository) {
+                          BookingRepository bookingRepository,
+                          PasswordEncoder passwordEncoder) {
         this.employeeRepository = employeeRepository;
         this.travelRepository = travelRepository;
         this.bookingRepository = bookingRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -37,9 +41,10 @@ public class DatabaseSeeder implements CommandLineRunner {
             return;
         }
 
-        Employee e1 = new Employee("mrossi", "Mario", "Rossi", "m.rossi@example.com", "Password1");
-        Employee e2 = new Employee("lbianchi", "Luca", "Bianchi", "l.bianchi@example.com", "Password1");
-        Employee e3 = new Employee("gverdi", "Giulia", "Verdi", "g.verdi@example.com", "Password1");
+        String encodedPwd = passwordEncoder.encode("Password1");
+        Employee e1 = new Employee("mrossi", "Mario", "Rossi", "m.rossi@example.com", encodedPwd);
+        Employee e2 = new Employee("lbianchi", "Luca", "Bianchi", "l.bianchi@example.com", encodedPwd);
+        Employee e3 = new Employee("gverdi", "Giulia", "Verdi", "g.verdi@example.com", encodedPwd);
         // Rendo uno degli utenti admin per testare le autorizzazioni
         e1.setRole(Role.ADMIN);
         employeeRepository.saveAll(List.of(e1, e2, e3));
