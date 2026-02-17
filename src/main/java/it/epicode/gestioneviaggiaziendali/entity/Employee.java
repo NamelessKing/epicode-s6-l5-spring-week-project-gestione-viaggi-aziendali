@@ -1,5 +1,6 @@
 package it.epicode.gestioneviaggiaziendali.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,6 +15,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+// Nascondo campi sensibili o tecnici nelle risposte JSON
+@JsonIgnoreProperties({
+        "password",
+        "accountNonExpired",
+        "accountNonLocked",
+        "authorities",
+        "credentialsNonExpired",
+        "enabled"
+})
 @Entity
 @Table(name = "employees")
 public class Employee implements UserDetails {

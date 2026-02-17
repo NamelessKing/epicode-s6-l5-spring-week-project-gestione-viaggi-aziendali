@@ -1,15 +1,20 @@
 package it.epicode.gestioneviaggiaziendali.security;
 
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity // Attiva l'infrastruttura di Spring Security per questa applicazione
@@ -57,12 +62,32 @@ public class SecurityConfig {
         // Così intercetto il token, lo verifico e valorizzo il SecurityContext.
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
+        // Attiva CORS usando la configurazione del bean CorsConfigurationSource.
+        // Senza questa riga, la config CORS non viene applicata da Spring Security.
+        http.cors(Customizer.withDefaults());
+
         return http.build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         // BCrypt e lo standard raccomandato da Spring per hashare le password
-        return new BCryptPasswordEncoder();
+        // 12 e un valore comune per bilanciare sicurezza e performance
+        return new BCryptPasswordEncoder(12);
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        // Whitelist degli origin frontend autorizzati a chiamare questa API
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        // Metodi e header consentiti (per demo: tutti; in produzione restringere)
+        configuration.setAllowedMethods(List.of("*"));
+        configuration.setAllowedHeaders(List.of("*"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
